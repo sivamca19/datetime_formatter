@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.name          = "date_formatter"
   spec.version       = DateFormatter::VERSION
   spec.authors       = ["sivamanikandan"]
-  spec.email         = ["sivamanikandan@railsfactory.org"]
+  spec.email         = ["siva.mca19@gmail.com"]
 
   spec.summary       = %q{DateFormatter is useful for follow the same date time format throughout the application.}
   spec.description   = %q{DateFormatter is useful for follow the same date time format throughout the application.}
