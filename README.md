@@ -34,13 +34,16 @@ Or install it yourself as:
   class Post < ActiveRecord::Base
     # this option will allow to give custom date time format for specific column
     has_datetime_formatter custom_format: {created_at: '%d/%m/%y', updated_at: '%d/%m/%Y at %I-%M %p'}
+  end
 
-    @post.created_at
+  @post.created_at
     "06/03/18"
 
-    @post.updated_at
-    "06/03/2018 at 12-30 PM"
-  end
+  @post.updated_at
+  "06/03/2018 at 12-30 PM"
+
+  # to get actual value
+  @post.or_updated_at
 
 ```
 
