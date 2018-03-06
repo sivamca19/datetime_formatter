@@ -1,7 +1,7 @@
 require 'active_support'
-module DateFormatter
- module HasDateFormatter
-    def has_date_formatter(options = {})
+module DatetimeFormatter
+ module HasDatetimeFormatter
+    def has_datetime_formatter(options = {})
       # custom format fields in hash format
       format_fields = (options[:custom_format] || {})
       # date time format
@@ -29,5 +29,5 @@ module DateFormatter
  end
 end
 ActiveSupport.on_load :active_record do
- send :extend, DateFormatter::HasDateFormatter
+ send :extend, DatetimeFormatter::HasDatetimeFormatter
 end

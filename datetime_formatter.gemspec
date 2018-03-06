@@ -1,17 +1,17 @@
 
 lib = File.expand_path("../lib", __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require "date_formatter/version"
+require "datetime_formatter/version"
 
 Gem::Specification.new do |spec|
-  spec.name          = "date_formatter"
-  spec.version       = DateFormatter::VERSION
+  spec.name          = "datetime_formatter"
+  spec.version       = DatetimeFormatter::VERSION
   spec.authors       = ["sivamanikandan"]
   spec.email         = ["siva.mca19@gmail.com"]
 
-  spec.summary       = %q{DateFormatter is useful for follow the same date time format throughout the application.}
-  spec.description   = %q{DateFormatter is useful for follow the same date time format throughout the application.}
-  spec.homepage      = "https://github.com/railsfactory-sivamanikandan/date_formatter"
+  spec.summary       = %q{DatetimeFormatter is useful for follow the same date time format throughout the application.}
+  spec.description   = %q{DatetimeFormatter is useful for follow the same date time format throughout the application.}
+  spec.homepage      = "https://github.com/railsfactory-sivamanikandan/datetime_formatter"
   spec.license       = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the 'allowed_push_host'

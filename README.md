@@ -1,6 +1,6 @@
 # DateFormatter
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/date_formatter`. To experiment with that code, run `bin/console` for an interactive prompt.
+Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/datetime_formatter`. To experiment with that code, run `bin/console` for an interactive prompt.
 
 TODO: Delete this and the text above, and describe your gem
 
@@ -9,7 +9,7 @@ TODO: Delete this and the text above, and describe your gem
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'date_formatter'
+gem 'datetime_formatter'
 ```
 
 And then execute:
@@ -18,14 +18,14 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install date_formatter
+    $ gem install datetime_formatter
 
 ## Usage
 
 ```ruby
   class Post < ActiveRecord::Base
     # automatically format the created_at & updated_at column in given format
-    has_date_formatter format: '%d/%m/%y'
+    has_datetime_formatter format: '%d/%m/%y'
   end
 
   @post.created_at
@@ -33,7 +33,7 @@ Or install it yourself as:
 
   class Post < ActiveRecord::Base
     # this option will allow to give custom date time format for specific column
-    has_date_formatter custom_format: {created_at: '%d/%m/%y', updated_at: '%d/%m/%Y at %I-%M %p'}
+    has_datetime_formatter custom_format: {created_at: '%d/%m/%y', updated_at: '%d/%m/%Y at %I-%M %p'}
 
     @post.created_at
     "06/03/18"
@@ -52,7 +52,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/railsfactory-sivamanikandan/date_formatter. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/railsfactory-sivamanikandan/datetime_formatter. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 
@@ -60,4 +60,4 @@ The gem is available as open source under the terms of the [MIT License](https:/
 
 ## Code of Conduct
 
-Everyone interacting in the DateFormatter project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/railsfactory-sivamanikandan/date_formatter/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the DateFormatter project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/railsfactory-sivamanikandan/datetime_formatter/blob/master/CODE_OF_CONDUCT.md).
