@@ -22,7 +22,8 @@ jobs:
             npm install
             npx eslint . -f json -o eslint-report.json || true
           fi
-
+      - name: Install ImageMagick libraries for rails_code_auditor
+        run: sudo apt-get update && sudo apt-get install -y libmagickwand-dev
       - name: Detect and run Ruby scans with Rails Code Auditor
         run: |
           if [ -f Gemfile ]; then
