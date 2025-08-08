@@ -1,0 +1,44 @@
+name: CodeGuardian Pro Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: "Type of scan"
+        required: true
+        default: "full"
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect and run JS scans
+        if: contains(join(github.event.pull_request ? github.event.pull_request.head.repo.full_name : github.repository), '')
+        run: |
+          if [ -f package.json ]; then
+            npm install
+            npx eslint . -f json -o eslint-report.json || true
+          fi
+
+      - name: Detect and run Ruby scans
+        run: |
+          if [ -f Gemfile ]; then
+            gem install rubocop brakeman
+            rubocop --format json --out rubocop-report.json || true
+            brakeman -q -o brakeman-report.json || true
+          fi
+
+      - name: Upload reports to CodeGuardian Pro
+        env:
+          CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
+        run: |
+          if [ -f eslint-report.json ]; then
+            curl -X POST https:///webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @eslint-report.json
+          fi
+          if [ -f rubocop-report.json ]; then
+            curl -X POST https:///webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @rubocop-report.json
+          fi
