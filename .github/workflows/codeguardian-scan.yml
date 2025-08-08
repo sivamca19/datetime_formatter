@@ -26,7 +26,8 @@ jobs:
       - name: Detect and run Ruby scans
         run: |
           if [ -f Gemfile ]; then
-            gem install rubocop brakeman
+            gem install --user-install rubocop brakeman
+            export PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
             rubocop --format json --out rubocop-report.json || true
             brakeman -q -o brakeman-report.json || true
           fi
@@ -34,10 +35,14 @@ jobs:
       - name: Upload reports to CodeGuardian Pro
         env:
           CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
+          APP_HOST: ${{ secrets.APP_HOST }}
         run: |
           if [ -f eslint-report.json ]; then
-            curl -X POST https://6383042217e1.ngrok-free.app/webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @eslint-report.json
+            curl -X POST https://${APP_HOST}/webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @eslint-report.json
           fi
           if [ -f rubocop-report.json ]; then
-            curl -X POST https://6383042217e1.ngrok-free.app/webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @rubocop-report.json
+            curl -X POST https://${APP_HOST}/webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @rubocop-report.json
+          fi
+          if [ -f brakeman-report.json ]; then
+            curl -X POST "https://${APP_HOST}/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @brakeman-report.json
           fi
