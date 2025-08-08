@@ -37,8 +37,8 @@ jobs:
           CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
         run: |
           if [ -f eslint-report.json ]; then
-            curl -X POST https:///webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @eslint-report.json
+            curl -X POST https://f04927713a67.ngrok-free.app/webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @eslint-report.json
           fi
           if [ -f rubocop-report.json ]; then
-            curl -X POST https:///webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @rubocop-report.json
+            curl -X POST https://f04927713a67.ngrok-free.app/webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @rubocop-report.json
           fi
