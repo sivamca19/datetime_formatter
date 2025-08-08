@@ -23,26 +23,28 @@ jobs:
             npx eslint . -f json -o eslint-report.json || true
           fi
 
-      - name: Detect and run Ruby scans
+      - name: Detect and run Ruby scans with Rails Code Auditor
         run: |
           if [ -f Gemfile ]; then
-            gem install --user-install rubocop brakeman
+            gem install --user-install rails_code_auditor
             export PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
-            rubocop --format json --out rubocop-report.json || true
-            brakeman -q -o brakeman-report.json || true
+            rails_code_auditor --format json --output rails_code_auditor_report.json || true
           fi
 
       - name: Upload reports to CodeGuardian Pro
         env:
           CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
           APP_HOST: ${{ secrets.APP_HOST }}
+          REPO: ${{ github.repository }}
+          SCAN_TYPE: ${{ github.event.inputs.scan_type }}
+          JOB_ID: ${{ github.run_id }}
+          JOB_STATUS: ${{ job.status }}
         run: |
           if [ -f eslint-report.json ]; then
-            curl -X POST https://${APP_HOST}/webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @eslint-report.json
+            jq -n               --arg repo "$REPO"               --arg scan_type "$SCAN_TYPE"               --arg job_id "$JOB_ID"               --arg job_status "$JOB_STATUS"               --slurpfile report eslint-report.json               '{repo: $repo, scan_type: $scan_type, job_id: $job_id, job_status: $job_status, report: $report[0]}'               > payload.json
+            curl -X POST "https://${APP_HOST}/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @payload.json
           fi
-          if [ -f rubocop-report.json ]; then
-            curl -X POST https://${APP_HOST}/webhooks/github_report               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @rubocop-report.json
-          fi
-          if [ -f brakeman-report.json ]; then
-            curl -X POST "https://${APP_HOST}/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @brakeman-report.json
+          if [ -f rails_code_auditor_report.json ]; then
+            jq -n               --arg repo "$REPO"               --arg scan_type "$SCAN_TYPE"               --arg job_id "$JOB_ID"               --arg job_status "$JOB_STATUS"               --slurpfile report rails_code_auditor_report.json               '{repo: $repo, scan_type: $scan_type, job_id: $job_id, job_status: $job_status, report: $report[0]}'               > payload.json
+            curl -X POST "https://${APP_HOST}/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               --data-binary @payload.json
           fi
