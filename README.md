@@ -44,7 +44,6 @@ $ gem install datetime_formatter
 
   # to get actual value
   @post.or_updated_at
-
 ```
 
 ## Development
