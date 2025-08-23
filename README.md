@@ -13,9 +13,9 @@ gem 'datetime_formatter'
 ```
 
 And then execute:
-
-    $ bundle
-
+```bash
+$ bundle
+```
 Or install it yourself as:
 
     $ gem install datetime_formatter
