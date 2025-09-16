@@ -1,4 +1,4 @@
-name: Git Connector Pro Scan11
+name: Git Connector Pro Scan
 
 on:
   workflow_dispatch:
