@@ -71,7 +71,7 @@ jobs:
       - name: Install Rails Code Auditor
         if: hashFiles('Gemfile') != ''
         run: |
-          gem install rails_code_auditor_report
+          gem install rails_code_auditor
 
       - name: Run Rails Code Auditor
         if: hashFiles('Gemfile') != ''
