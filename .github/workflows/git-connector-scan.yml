@@ -1,4 +1,4 @@
-name: CodeGuardian Pro Scan
+name: Git Connector Pro Scan
 
 on:
   workflow_dispatch:
