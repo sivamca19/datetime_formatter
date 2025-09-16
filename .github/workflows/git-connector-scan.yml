@@ -52,22 +52,32 @@ jobs:
           SCAN_TYPE: ${{ github.event.inputs.scan_type || 'pr' }}
           JOB_ID: ${{ github.run_id }}
           JOB_STATUS: ${{ job.status }}
+          PR_NUMBER: ${{ github.event.pull_request.number || '' }}
         run: |
           # Upload JavaScript report
           if [ -f eslint-report.json ]; then
-            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report" \
-              -H "Authorization: Bearer ${CGP_API_KEY}" \
-              -H "Content-Type: application/json" \
-              --data @eslint-report.json \
-              --fail --silent --show-error
+            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               -d "{
+                "repository": "${REPO}",
+                "pr_number": "${PR_NUMBER}",
+                "report_type": "eslint",
+                "job_id": "${JOB_ID}",
+                "scan_type": "${SCAN_TYPE}",
+                "workflow_run_id": "${{ github.run_id }}",
+                "commit_sha": "${{ github.sha }}",
+                "report_data": $(cat eslint-report.json)
+              }"               --fail --silent --show-error
           fi
 
           # Upload Ruby report
           if [ -f rails_code_auditor_report.json ]; then
-            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report" \
-              -H "Authorization: Bearer ${CGP_API_KEY}" \
-              -H "Content-Type: application/json" \
-              --data @rails_code_auditor_report.json \
-              --fail --silent --show-error
+            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               -d "{
+                "repository": "${REPO}",
+                "pr_number": "${PR_NUMBER}",
+                "report_type": "rails_code_auditor",
+                "job_id": "${JOB_ID}",
+                "scan_type": "${SCAN_TYPE}",
+                "workflow_run_id": "${{ github.run_id }}",
+                "commit_sha": "${{ github.sha }}",
+                "report_data": $(cat rails_code_auditor_report.json)
+              }"               --fail --silent --show-error
           fi
-
