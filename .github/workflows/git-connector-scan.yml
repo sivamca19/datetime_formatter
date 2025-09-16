@@ -56,28 +56,28 @@ jobs:
         run: |
           # Upload JavaScript report
           if [ -f eslint-report.json ]; then
-            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               -d "{
-                "repository": "${REPO}",
-                "pr_number": "${PR_NUMBER}",
-                "report_type": "eslint",
-                "job_id": "${JOB_ID}",
-                "scan_type": "${SCAN_TYPE}",
-                "workflow_run_id": "${{ github.run_id }}",
-                "commit_sha": "${{ github.sha }}",
-                "report_data": $(cat eslint-report.json)
-              }"               --fail --silent --show-error
+            jq -n               --arg repo "${REPO}"               --arg pr_number "${PR_NUMBER}"               --arg report_type "eslint"               --arg job_id "${JOB_ID}"               --arg scan_type "${SCAN_TYPE}"               --arg workflow_run_id "${{ github.run_id }}"               --arg commit_sha "${{ github.sha }}"               --argjson report_data "$(cat eslint-report.json)"               '{
+                repository: $repo,
+                pr_number: $pr_number,
+                report_type: $report_type,
+                job_id: $job_id,
+                scan_type: $scan_type,
+                workflow_run_id: $workflow_run_id,
+                commit_sha: $commit_sha,
+                report_data: $report_data
+              }' | curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"                 -H "Authorization: Bearer ${CGP_API_KEY}"                 -H "Content-Type: application/json"                 -d @-                 --fail --silent --show-error
           fi
 
           # Upload Ruby report
           if [ -f rails_code_auditor_report.json ]; then
-            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               -d "{
-                "repository": "${REPO}",
-                "pr_number": "${PR_NUMBER}",
-                "report_type": "rails_code_auditor",
-                "job_id": "${JOB_ID}",
-                "scan_type": "${SCAN_TYPE}",
-                "workflow_run_id": "${{ github.run_id }}",
-                "commit_sha": "${{ github.sha }}",
-                "report_data": $(cat rails_code_auditor_report.json)
-              }"               --fail --silent --show-error
+            jq -n               --arg repo "${REPO}"               --arg pr_number "${PR_NUMBER}"               --arg report_type "rails_code_auditor"               --arg job_id "${JOB_ID}"               --arg scan_type "${SCAN_TYPE}"               --arg workflow_run_id "${{ github.run_id }}"               --arg commit_sha "${{ github.sha }}"               --argjson report_data "$(cat rails_code_auditor_report.json)"               '{
+                repository: $repo,
+                pr_number: $pr_number,
+                report_type: $report_type,
+                job_id: $job_id,
+                scan_type: $scan_type,
+                workflow_run_id: $workflow_run_id,
+                commit_sha: $commit_sha,
+                report_data: $report_data
+              }' | curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"                 -H "Authorization: Bearer ${CGP_API_KEY}"                 -H "Content-Type: application/json"                 -d @-                 --fail --silent --show-error
           fi
