@@ -39,6 +39,8 @@ jobs:
       - name: Run Rails Code Auditor
         if: hashFiles('Gemfile') != ''
         run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick libmagickwand-dev
           gem install rails_code_auditor
           rails_code_auditor --format json --output rails_code_auditor_report.json || true
 
