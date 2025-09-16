@@ -1,4 +1,4 @@
-name: Git Connect Pro Scan
+name: CodeGuardian Pro Scan
 
 on:
   workflow_dispatch:
@@ -7,38 +7,14 @@ on:
         description: "Type of scan"
         required: true
         default: "full"
-        type: choice
-        options:
-        - full
-        - security
-        - quality
-        - repository
-        - pr
-      branch:
-        description: "Branch to analyze"
-        required: false
-        default: "main"
-      pr_number:
-        description: "PR number (for PR scans)"
-        required: false
   pull_request:
     types: [opened, synchronize, reopened]
-  push:
-    branches: [ main, develop ]
 
 jobs:
   scan:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      checks: write
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -54,152 +30,42 @@ jobs:
           ruby-version: '3.1'
           bundler-cache: true
 
-      - name: Install dependencies
-        if: hashFiles('package.json') != ''
-        run: npm ci
-
       - name: Run JavaScript linting
         if: hashFiles('package.json') != ''
-        continue-on-error: true
         run: |
-          npx eslint . \
-            --format json \
-            --output-file eslint-report.json \
-            --ext .js,.jsx,.ts,.tsx \
-            || echo "ESLint completed with issues"
-
-      - name: Install Rails Code Auditor
-        if: hashFiles('Gemfile') != ''
-        run: |
-          gem install rails_code_auditor
+          npm ci
+          npx eslint . -f json -o eslint-report.json || true
 
       - name: Run Rails Code Auditor
         if: hashFiles('Gemfile') != ''
-        continue-on-error: true
         run: |
-          rails_code_auditor \
-            --format json \
-            --output rails_code_auditor_report.json \
-            --fail-on-error false \
-            || echo "Rails Code Auditor completed with issues"
+          gem install rails_code_auditor
+          rails_code_auditor --format json --output rails_code_auditor_report.json || true
 
-      - name: Run security scan
-        if: hashFiles('Gemfile') != ''
-        continue-on-error: true
-        run: |
-          gem install brakeman
-          brakeman \
-            --format json \
-            --output brakeman-report.json \
-            --no-exit-on-warn \
-            --no-exit-on-error \
-            || echo "Brakeman completed with issues"
-
-      - name: Upload JavaScript report
-        if: hashFiles('eslint-report.json') != ''
+      - name: Upload reports to CodeGuardian Pro
         env:
           CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
           APP_HOST: ${{ secrets.APP_HOST }}
           REPO: ${{ github.repository }}
           SCAN_TYPE: ${{ github.event.inputs.scan_type || 'pr' }}
           JOB_ID: ${{ github.run_id }}
-          PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number || '' }}
+          JOB_STATUS: ${{ job.status }}
         run: |
-          curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report" \
-            -H "Authorization: Bearer ${CGP_API_KEY}" \
-            -H "Content-Type: application/json" \
-            -d @- <<EOF
-          {
-            "repository": "${REPO}",
-            "pr_number": "${PR_NUMBER}",
-            "report_type": "eslint",
-            "job_id": "${JOB_ID}",
-            "scan_type": "${SCAN_TYPE}",
-            "workflow_run_id": "${{ github.run_id }}",
-            "commit_sha": "${{ github.sha }}",
-            "report_data": $(cat eslint-report.json)
-          }
-          EOF
+          # Upload JavaScript report
+          if [ -f eslint-report.json ]; then
+            curl -X POST "https://${APP_HOST}/webhooks/github_report" \
+              -H "Authorization: Bearer ${CGP_API_KEY}" \
+              -H "Content-Type: application/json" \
+              --data @eslint-report.json \
+              --fail --silent --show-error
+          fi
 
-      - name: Upload Rails Code Auditor report
-        if: hashFiles('rails_code_auditor_report.json') != ''
-        env:
-          CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
-          APP_HOST: ${{ secrets.APP_HOST }}
-          REPO: ${{ github.repository }}
-          SCAN_TYPE: ${{ github.event.inputs.scan_type || 'pr' }}
-          JOB_ID: ${{ github.run_id }}
-          PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number || '' }}
-        run: |
-          curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report" \
-            -H "Authorization: Bearer ${CGP_API_KEY}" \
-            -H "Content-Type: application/json" \
-            -d @- <<EOF
-          {
-            "repository": "${REPO}",
-            "pr_number": "${PR_NUMBER}",
-            "report_type": "rails_code_auditor",
-            "job_id": "${JOB_ID}",
-            "scan_type": "${SCAN_TYPE}",
-            "workflow_run_id": "${{ github.run_id }}",
-            "commit_sha": "${{ github.sha }}",
-            "report_data": $(cat rails_code_auditor_report.json)
-          }
-          EOF
+          # Upload Ruby report
+          if [ -f rails_code_auditor_report.json ]; then
+            curl -X POST "https://${APP_HOST}/webhooks/github_report" \
+              -H "Authorization: Bearer ${CGP_API_KEY}" \
+              -H "Content-Type: application/json" \
+              --data @rails_code_auditor_report.json \
+              --fail --silent --show-error
+          fi
 
-      - name: Upload Brakeman security report
-        if: hashFiles('brakeman-report.json') != ''
-        env:
-          CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
-          APP_HOST: ${{ secrets.APP_HOST }}
-          REPO: ${{ github.repository }}
-          SCAN_TYPE: ${{ github.event.inputs.scan_type || 'pr' }}
-          JOB_ID: ${{ github.run_id }}
-          PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number || '' }}
-        run: |
-          curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report" \
-            -H "Authorization: Bearer ${CGP_API_KEY}" \
-            -H "Content-Type: application/json" \
-            -d @- <<EOF
-          {
-            "repository": "${REPO}",
-            "pr_number": "${PR_NUMBER}",
-            "report_type": "brakeman",
-            "job_id": "${JOB_ID}",
-            "scan_type": "${SCAN_TYPE}",
-            "workflow_run_id": "${{ github.run_id }}",
-            "commit_sha": "${{ github.sha }}",
-            "report_data": $(cat brakeman-report.json)
-          }
-          EOF
-
-      - name: Trigger AI Review
-        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.number }}
-        env:
-          CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
-          APP_HOST: ${{ secrets.APP_HOST }}
-          REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          curl -X POST "https://${APP_HOST}/git_connector/webhooks/trigger_ai_review" \
-            -H "Authorization: Bearer ${CGP_API_KEY}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "repository": "'${REPO}'",
-              "pr_number": "'${PR_NUMBER}'",
-              "trigger_source": "github_actions",
-              "workflow_run_id": "${{ github.run_id }}",
-              "commit_sha": "${{ github.sha }}"
-            }' \
-            --fail --silent --show-error
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: code-analysis-reports
-          path: |
-            eslint-report.json
-            rails_code_auditor_report.json
-            brakeman-report.json
-          retention-days: 30
