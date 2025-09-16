@@ -55,7 +55,7 @@ jobs:
         run: |
           # Upload JavaScript report
           if [ -f eslint-report.json ]; then
-            curl -X POST "https://${APP_HOST}/webhooks/github_report" \
+            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report" \
               -H "Authorization: Bearer ${CGP_API_KEY}" \
               -H "Content-Type: application/json" \
               --data @eslint-report.json \
@@ -64,7 +64,7 @@ jobs:
 
           # Upload Ruby report
           if [ -f rails_code_auditor_report.json ]; then
-            curl -X POST "https://${APP_HOST}/webhooks/github_report" \
+            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report" \
               -H "Authorization: Bearer ${CGP_API_KEY}" \
               -H "Content-Type: application/json" \
               --data @rails_code_auditor_report.json \
