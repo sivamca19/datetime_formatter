@@ -1,0 +1,95 @@
+name: Git Connect Pro Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: "Type of scan"
+        required: true
+        default: "full"
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        if: hashFiles('package.json') != ''
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        if: hashFiles('Gemfile') != ''
+        with:
+          ruby-version: '3.1'
+          bundler-cache: true
+
+      - name: Run JavaScript linting
+        if: hashFiles('package.json') != ''
+        run: |
+          npm ci
+          npx eslint . -f json -o eslint-report.json || true
+
+      - name: Run Rails Code Auditor
+        if: hashFiles('Gemfile') != ''
+        run: |
+          gem install rails_code_auditor_report
+          rails_code_auditor --format json --output rails_code_auditor_report.json || true
+
+      - name: Upload reports to CodeGuardian Pro
+        env:
+          CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
+          APP_HOST: ${{ secrets.APP_HOST }}
+          REPO: ${{ github.repository }}
+          SCAN_TYPE: ${{ github.event.inputs.scan_type || 'pr' }}
+          JOB_ID: ${{ github.run_id }}
+          JOB_STATUS: ${{ job.status }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Upload JavaScript report
+          if [ -f eslint-report.json ]; then
+            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               -d @- <<EOF
+          {
+            "repository": "${REPO}",
+            "pr_number": "${PR_NUMBER}",
+            "report_type": "eslint",
+            "job_id": "${JOB_ID}",
+            "scan_type": "${SCAN_TYPE}",
+            "report_data": $(cat eslint-report.json)
+          }
+EOF
+          fi
+          
+          # Upload Ruby report
+          if [ -f rails_code_auditor_report.json ]; then
+            curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"               -H "Authorization: Bearer ${CGP_API_KEY}"               -H "Content-Type: application/json"               -d @- <<EOF
+          {
+            "repository": "${REPO}",
+            "pr_number": "${PR_NUMBER}",
+            "report_type": "rails_code_auditor",
+            "job_id": "${JOB_ID}",
+            "scan_type": "${SCAN_TYPE}",
+            "report_data": $(cat rails_code_auditor_report.json)
+          }
+EOF
+          fi
+
+      - name: Trigger AI Review
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          CGP_API_KEY: ${{ secrets.CGP_API_KEY }}
+          APP_HOST: ${{ secrets.APP_HOST }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          curl -X POST "https://${APP_HOST}/git_connector/webhooks/trigger_ai_review"             -H "Authorization: Bearer ${CGP_API_KEY}"             -H "Content-Type: application/json"             -d '{
+              "repository": "'${REPO}'",
+              "pr_number": "'${PR_NUMBER}'",
+              "trigger_source": "github_actions"
+            }'             --fail --silent --show-error
