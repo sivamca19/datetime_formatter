@@ -1,4 +1,4 @@
-name: Git Connector Pro Scan111
+name: Git Connector Pro Scan
 
 on:
   workflow_dispatch:
@@ -65,7 +65,7 @@ jobs:
                 workflow_run_id: $workflow_run_id,
                 commit_sha: $commit_sha,
                 report_data: $report_data
-              }' | curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"                 -H "Authorization: Bearer ${CGP_API_KEY}"                 -H "Content-Type: application/json"                 -d @-                 --fail --silent --show-error
+              }' | curl -X POST "https://${APP_HOST}/git_connector/webhooks/analysis_report"                 -H "Authorization: Bearer ${CGP_API_KEY}"                 -H "Content-Type: application/json"                 -d @-                 --fail --silent --show-error
           fi
 
           # Upload Ruby report
@@ -79,5 +79,5 @@ jobs:
                 workflow_run_id: $workflow_run_id,
                 commit_sha: $commit_sha,
                 report_data: $report_data
-              }' | curl -X POST "https://${APP_HOST}/git_connector/webhooks/github_report"                 -H "Authorization: Bearer ${CGP_API_KEY}"                 -H "Content-Type: application/json"                 -d @-                 --fail --silent --show-error
+              }' | curl -X POST "https://${APP_HOST}/git_connector/webhooks/analysis_report"                 -H "Authorization: Bearer ${CGP_API_KEY}"                 -H "Content-Type: application/json"                 -d @-                 --fail --silent --show-error
           fi
